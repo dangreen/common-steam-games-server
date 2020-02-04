@@ -1,0 +1,20 @@
+{
+  "generator-trigen-lib": {
+    "editPackage": true,
+    "pkg": {
+      "name": "@common-steam-games/server",
+      "version": "1.0.0",
+      "description": "Test task from chatra",
+      "repository": "",
+      "author": "dangreen"
+    },
+    "type": "node",
+    "lang": "ts",
+    "rollup": true,
+    "jest": true,
+    "coverage": true,
+    "publishAsRoot": false,
+    "cleanPublish": false,
+    "checkSize": false
+  }
+}

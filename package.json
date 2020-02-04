@@ -1,0 +1,62 @@
+{
+  "name": "@common-steam-games/server",
+  "version": "1.0.0",
+  "description": "Test task from chatra",
+  "author": "dangreen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dangreen/common-steam-games-server"
+  },
+  "bugs": {
+    "url": "https://github.com/dangreen/common-steam-games-server/issues"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "scripts": {
+    "lint": "trigen-scripts lint",
+    "test": "trigen-scripts test",
+    "build:docs": "trigen-scripts build:docs",
+    "start": "trigen-scripts start src/App/index.ts",
+    "build": "trigen-scripts build"
+  },
+  "keywords": [],
+  "dependencies": {
+    "@babel/runtime": "^7.8.4",
+    "@nestjs/common": "^6.11.5",
+    "@nestjs/core": "^6.11.5",
+    "@nestjs/platform-fastify": "^6.11.5",
+    "@nestjs/platform-socket.io": "^6.11.5",
+    "@nestjs/swagger": "^4.2.4",
+    "@nestjs/websockets": "^6.11.5",
+    "@types/dotenv": "^8.2.0",
+    "@types/node": "^13.7.0",
+    "@types/qs": "^6.9.0",
+    "@types/socket.io": "^2.1.4",
+    "axios": "^0.19.2",
+    "axios-rate-limit": "^1.2.1",
+    "class-transformer": "^0.2.3",
+    "class-validator": "^0.11.0",
+    "dotenv": "^8.2.0",
+    "fastify-static": "^2.6.0",
+    "fastify-swagger": "^2.5.0",
+    "qs": "^6.9.1",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@trigen/scripts": "4.0.0",
+    "@trigen/scripts-plugin-babel": "4.0.0",
+    "@trigen/scripts-plugin-eslint": "4.0.0",
+    "@trigen/scripts-plugin-rollup": "4.0.0",
+    "@trigen/scripts-plugin-typescript": "4.0.0",
+    "@trigen/scripts-preset-lib": "4.0.0",
+    "babel-plugin-transform-typescript-metadata": "^0.2.2",
+    "babel-preset-trigen": "^2.3.0",
+    "rollup-plugin-tslint": "^0.2.2",
+    "rollup-plugin-typescript2": "^0.25.3"
+  },
+  "files": [
+    "lib"
+  ]
+}

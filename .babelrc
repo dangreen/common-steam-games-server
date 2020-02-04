@@ -1,0 +1,33 @@
+{
+	"exclude": "node_modules/**",
+	"presets": [
+		[
+			"babel-preset-trigen",
+			{
+				"targets": {
+					"node": "current"
+				},
+				"commonjs": true
+			}
+		]
+	],
+	"env": {
+		"test": {
+			"presets": [
+				[
+					"babel-preset-trigen",
+					{
+						"targets": {
+							"node": "current"
+						},
+						"commonjs": true,
+						"typescript": true
+					}
+				]
+			],
+			"plugins": [
+				"babel-plugin-transform-typescript-metadata"
+			]
+		}
+	}
+}
