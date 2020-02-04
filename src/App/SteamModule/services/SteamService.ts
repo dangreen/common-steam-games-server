@@ -96,7 +96,7 @@ export default class SteamService {
 			} = response.data.response;
 			const appIds: number[] = games.map(({ appid }) => appid);
 
-			logger.verbose(`Games count: ${appIds.length} (for ${steamid}`, `${loggerContext}::getGamesList`);
+			logger.verbose(`Games count: ${appIds.length} (for ${steamid})`, `${loggerContext}::getGamesList`);
 
 			return appIds;
 
