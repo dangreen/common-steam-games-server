@@ -147,6 +147,8 @@ export default class SteamService {
 				appsCache.delete(appsCache.keys().next().value);
 			}
 
+			appsCache.set(appid, appInfo);
+
 			logger.verbose('Success', `${loggerContext}::getGameInfo`);
 
 			return appInfo;
