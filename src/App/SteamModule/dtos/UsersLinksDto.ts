@@ -17,12 +17,12 @@ export class UsersLinksDto {
 	@IsNotEmpty()
 	@IsArray()
 	@ArrayMinSize(2)
-	@ArrayMaxSize(8)
+	@ArrayMaxSize(20)
 	@ArrayUnique()
 	@IsUrl({}, {
 		each: true
 	})
-	@Matches(/^\https:\/\/steamcommunity\.com\/id\/[^/]+\/?$/, {
+	@Matches(/^https:\/\/steamcommunity\.com\/id\/[^/]+\/?$/, {
 		each: true
 	})
 	readonly links: string[];

@@ -57,7 +57,7 @@ export default class SteamService {
 			const html = response.data;
 			const [, id] = /"steamid":"([^"]+)"/.exec(html);
 
-			logger.verbose(`Result: ${id}`, `${loggerContext}::getSteamidFromLink`);
+			logger.verbose(`Result: ${id} (for ${link})`, `${loggerContext}::getSteamidFromLink`);
 
 			return id;
 
@@ -96,7 +96,7 @@ export default class SteamService {
 			} = response.data.response;
 			const appIds: number[] = games.map(({ appid }) => appid);
 
-			logger.verbose(`Games count: ${appIds.length}`, `${loggerContext}::getGamesList`);
+			logger.verbose(`Games count: ${appIds.length} (for ${steamid}`, `${loggerContext}::getGamesList`);
 
 			return appIds;
 
@@ -122,7 +122,7 @@ export default class SteamService {
 		logger.verbose(`Input appid: ${appid}`, `${loggerContext}::getGameInfo`);
 
 		if (appsCache.has(appid)) {
-			logger.verbose(`Success from cache (${appid})`, `${loggerContext}::getGameInfo`);
+			logger.verbose(`Success from cache (for ${appid})`, `${loggerContext}::getGameInfo`);
 			return appsCache.get(appid);
 		}
 
@@ -149,7 +149,7 @@ export default class SteamService {
 
 			appsCache.set(appid, appInfo);
 
-			logger.verbose('Success', `${loggerContext}::getGameInfo`);
+			logger.verbose(`Success (for ${appid})`, `${loggerContext}::getGameInfo`);
 
 			return appInfo;
 

@@ -59,22 +59,23 @@ export default class SteamController {
 					return apps;
 				})
 			);
-			const commonAppsIds = intersects(apps);
-			const commonAppsIdsCount = Array.isArray(commonAppsIds)
-				? commonAppsIds.length
-				: commonAppsIds.size;
-			const commonMultiplayerApps = [];
+			const commonAppsIds = Array.from(intersects(apps));
 
-			logger.verbose(`Common apps count: ${commonAppsIdsCount}`, `${loggerContext}::commonMultiplayerGames`);
+			logger.verbose(`Common apps count: ${commonAppsIds.length}`, `${loggerContext}::commonMultiplayerGames`);
 
-			for (const appid of commonAppsIds) {
+			const commonApps = await Promise.all(
+				commonAppsIds.map(async (appid) => {
 
-				const game = await steamService.getGameInfo(appid);
+					const game = await steamService.getGameInfo(appid);
 
-				if (game.tags.includes('Multiplayer')) {
-					commonMultiplayerApps.push(game);
-				}
-			}
+					if (game.tags.includes('Multiplayer')) {
+						return game;
+					}
+
+					return null;
+				})
+			);
+			const commonMultiplayerApps = commonApps.filter(Boolean);
 
 			logger.verbose(`Common multiplayer apps count: ${commonMultiplayerApps.length}`, `${loggerContext}::commonMultiplayerGames`);
 
