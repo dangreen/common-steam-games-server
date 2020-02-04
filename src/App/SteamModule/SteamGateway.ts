@@ -73,7 +73,7 @@ export default class SteamGateway {
 
 					if (game.tags.includes('Multiplayer')) {
 						client.emit('commonMultiplayerGames', {
-							done: true,
+							done: false,
 							game
 						});
 						return game;
