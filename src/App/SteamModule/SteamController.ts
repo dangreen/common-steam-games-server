@@ -2,6 +2,7 @@ import {
 	UseInterceptors,
 	ClassSerializerInterceptor,
 	Controller,
+	OnModuleDestroy,
 	Logger,
 	Post,
 	Body,
@@ -13,24 +14,44 @@ import {
 import {
 	isAppError,
 	intersects,
-	getLoggerContext
+	getLoggerContext,
+	createStringPropComparator
 } from '~/common';
-import SteamService from './services/SteamService';
+import SteamService, {
+	IAppInfo
+} from './services/SteamService';
 import {
 	UsersLinksDto
 } from './dtos';
 
 const loggerContext = getLoggerContext(__filename);
+const namePropComparator = createStringPropComparator('name');
 
 @ApiTags('steam')
 @Controller('api/steam')
 @UseInterceptors(ClassSerializerInterceptor)
-export default class SteamController {
+export default class SteamController implements OnModuleDestroy {
+
+	private static readonly multiplayerGamesCacheUpdateInterval = 1000 * 60 * 5;
+	private readonly multiplayerGamesCacheUpdateIntervalId: NodeJS.Timeout = null;
+	private multiplayerGamesCacheAccess: Promise<Map<number, IAppInfo>> = null;
 
 	constructor(
 		private readonly logger: Logger,
 		private readonly steamService: SteamService
-	) {}
+	) {
+
+		this.updateMultiplayerGamesCache();
+
+		this.multiplayerGamesCacheUpdateIntervalId = setInterval(
+			this.updateMultiplayerGamesCache.bind(this),
+			SteamController.multiplayerGamesCacheUpdateInterval
+		);
+	}
+
+	onModuleDestroy() {
+		clearInterval(this.multiplayerGamesCacheUpdateIntervalId);
+	}
 
 	@Post('common-multiplayer-games')
 	async commonMultiplayerGames(
@@ -39,7 +60,8 @@ export default class SteamController {
 
 		const {
 			logger,
-			steamService
+			steamService,
+			multiplayerGamesCacheAccess
 		} = this;
 		const {
 			links
@@ -51,31 +73,23 @@ export default class SteamController {
 			logger.verbose(links, `${loggerContext}::commonMultiplayerGames`);
 
 			const apps = await Promise.all(
-				links.map(async (link) => {
-
-					const steamid = await steamService.getSteamidFromLink(link);
-					const apps = await steamService.getGamesList(steamid);
-
-					return apps;
-				})
+				links.map(
+					link => steamService.getGamesList(link)
+				)
 			);
 			const commonAppsIds = Array.from(intersects(apps));
 
 			logger.verbose(`Common apps count: ${commonAppsIds.length}`, `${loggerContext}::commonMultiplayerGames`);
 
-			const commonApps = await Promise.all(
-				commonAppsIds.map(async (appid) => {
+			const multiplayerGamesCache = await multiplayerGamesCacheAccess;
+			const commonMultiplayerApps = commonAppsIds.map((appid) => {
 
-					const game = await steamService.getGameInfo(appid);
+				if (multiplayerGamesCache.has(appid)) {
+					return multiplayerGamesCache.get(appid);
+				}
 
-					if (game.tags.includes('Multiplayer')) {
-						return game;
-					}
-
-					return null;
-				})
-			);
-			const commonMultiplayerApps = commonApps.filter(Boolean);
+				return null;
+			}).filter(Boolean).sort(namePropComparator);
 
 			logger.verbose(`Common multiplayer apps count: ${commonMultiplayerApps.length}`, `${loggerContext}::commonMultiplayerGames`);
 
@@ -89,5 +103,17 @@ export default class SteamController {
 
 			throw new BadRequestException();
 		}
+	}
+
+	private async updateMultiplayerGamesCache() {
+
+		const {
+			logger,
+			steamService
+		} = this;
+
+		logger.verbose('Updating of multiplayer games cache...', `${loggerContext}::commonMultiplayerGames`);
+
+		this.multiplayerGamesCacheAccess = steamService.getGamesInfoByTag('Multiplayer');
 	}
 }

@@ -6,7 +6,8 @@ import {
 import rateLimit from 'axios-rate-limit';
 import {
 	AppError,
-	getLoggerContext
+	getLoggerContext,
+	printError
 } from '~/common';
 import {
 	AxiosServiceToken,
@@ -17,6 +18,8 @@ import {
 	IAppInfo
 } from './SteamServices.types';
 
+export * from './SteamServices.types';
+
 const loggerContext = getLoggerContext(__filename);
 
 @Injectable()
@@ -24,10 +27,8 @@ export default class SteamService {
 
 	private static readonly steamspyTimeoutTime = 1000;
 	private static readonly steamspyRequestsLimit = 4;
-	private static readonly appsCacheLimit = 10000;
 	private readonly axios: AxiosInstance;
 	private readonly steamspyAxios: AxiosInstance;
-	private readonly appsCache = new Map<number, IAppInfo>();
 
 	constructor(
 		private readonly logger: Logger,
@@ -46,47 +47,60 @@ export default class SteamService {
 			logger,
 			axios
 		} = this;
+		let steamid: string = null;
 
 		logger.verbose(`Input link: ${link}`, `${loggerContext}::getSteamidFromLink`);
 
 		try {
 
-			const response = await axios.get<string>(link, {
-				responseType: 'text'
-			});
-			const html = response.data;
-			const [, id] = /"steamid":"([^"]+)"/.exec(html);
+			const [, vanityurl] = /(?:^|\/)([^\/]+)\/?$/.exec(link);
 
-			logger.verbose(`Result: ${id} (for ${link})`, `${loggerContext}::getSteamidFromLink`);
+			logger.verbose(`vanityurl: ${vanityurl} (for ${link})`, `${loggerContext}::getSteamidFromLink`);
 
-			return id;
+			if (/^\d+$/.test(vanityurl)) {
+				steamid = vanityurl;
+			} else {
+
+				const response = await axios.get('http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001', {
+					params: {
+						key:    process.env.STEAM_KEY,
+						format: 'json',
+						vanityurl
+					}
+				});
+				({
+					steamid
+				} = response.data.response);
+			}
 
 		} catch (catchedError) {
-			const err = new AppError(`Error while handling link: ${link}`);
-			this.logger.error(
-				catchedError.message,
-				catchedError.stack,
-				`${loggerContext}::getSteamidFromLink`
-			);
+			const err = new AppError(`Invalid steam user's link: ${link}`);
+			printError(logger, catchedError, `${loggerContext}::getSteamidFromLink`);
 			throw err;
 		}
+
+		logger.verbose(`Result: ${steamid} (for ${link})`, `${loggerContext}::getSteamidFromLink`);
+
+		return steamid;
 	}
 
-	async getGamesList(steamid: string) {
+	async getGamesList(steamidOrLink: string) {
 
 		const {
 			logger,
 			axios
 		} = this;
 
-		logger.verbose(`Input steamid: ${steamid}`, `${loggerContext}::getGamesList`);
+		logger.verbose(`Input steamid or link: ${steamidOrLink}`, `${loggerContext}::getGamesList`);
+
+		const steamid = await this.getSteamidFromLink(steamidOrLink);
 
 		try {
 
 			const response = await axios.get('http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001', {
 				params: {
-					key: process.env.STEAM_KEY,
-					format: 'json',
+					key:                       process.env.STEAM_KEY,
+					format:                    'json',
 					include_played_free_games: false,
 					steamid
 				}
@@ -96,17 +110,13 @@ export default class SteamService {
 			} = response.data.response;
 			const appIds: number[] = games.map(({ appid }) => appid);
 
-			logger.verbose(`Games count: ${appIds.length} (for ${steamid})`, `${loggerContext}::getGamesList`);
+			logger.verbose(`Games count: ${appIds.length} (for ${steamidOrLink})`, `${loggerContext}::getGamesList`);
 
 			return appIds;
 
 		} catch (catchedError) {
-			const err = new AppError(`Error while handling steamid: ${steamid}`);
-			this.logger.error(
-				catchedError.message,
-				catchedError.stack,
-				`${loggerContext}::getGamesList`
-			);
+			const err = new AppError(`Can't get ${steamidOrLink}'s games`);
+			printError(logger, catchedError, `${loggerContext}::getGamesList`);
 			throw err;
 		}
 	}
@@ -115,16 +125,10 @@ export default class SteamService {
 
 		const {
 			logger,
-			steamspyAxios,
-			appsCache
+			steamspyAxios
 		} = this;
 
 		logger.verbose(`Input appid: ${appid}`, `${loggerContext}::getGameInfo`);
-
-		if (appsCache.has(appid)) {
-			logger.verbose(`Success from cache (for ${appid})`, `${loggerContext}::getGameInfo`);
-			return appsCache.get(appid);
-		}
 
 		try {
 
@@ -138,28 +142,64 @@ export default class SteamService {
 				data
 			} = response;
 			const appInfo: IAppInfo = {
-				id: appid,
+				id:   appid,
 				name: data.name,
 				tags: Object.keys(data.tags)
 			};
-
-			if (appsCache.size > SteamService.appsCacheLimit) {
-				appsCache.delete(appsCache.keys().next().value);
-			}
-
-			appsCache.set(appid, appInfo);
 
 			logger.verbose(`Success (for ${appid})`, `${loggerContext}::getGameInfo`);
 
 			return appInfo;
 
 		} catch (catchedError) {
-			const err = new AppError(`Error while handling appid: ${appid}`);
-			this.logger.error(
-				catchedError.message,
-				catchedError.stack,
-				`${loggerContext}::getGameInfo`
-			);
+			const err = new AppError(`Can't get info about app with appid ${appid}`);
+			printError(logger, catchedError, `${loggerContext}::getGameInfo`);
+			throw err;
+		}
+	}
+
+	async getGamesInfoByTag(tag: string) {
+
+		const {
+			logger,
+			steamspyAxios
+		} = this;
+
+		logger.verbose(`Input tag: ${tag}`, `${loggerContext}::getGamesInfoByTag`);
+
+		try {
+
+			const response = await steamspyAxios.get('https://steamspy.com/api.php', {
+				params: {
+					request: 'tag',
+					tag
+				}
+			});
+			const {
+				data
+			} = response;
+			const appsInfo = Object.entries(data).reduce((
+				appsInfo,
+				[idString, info]: [string, any]
+			) => {
+
+				const id = parseInt(idString, 10);
+
+				appsInfo.set(id, {
+					id,
+					name: info.name
+				});
+
+				return appsInfo;
+			}, new Map<number, IAppInfo>());
+
+			logger.verbose(`Success (for ${tag})`, `${loggerContext}::getGamesInfoByTag`);
+
+			return appsInfo;
+
+		} catch (catchedError) {
+			const err = new AppError(`Can't get info about apps with tag ${tag}`);
+			printError(logger, catchedError, `${loggerContext}::getGamesInfoByTag`);
 			throw err;
 		}
 	}

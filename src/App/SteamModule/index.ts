@@ -5,7 +5,6 @@ import {
 import AxiosService from '~/App/services/AxiosService';
 import SteamService from './services/SteamService';
 import SteamController from './SteamController';
-import SteamGateway from './SteamGateway';
 
 export {
 	SteamService
@@ -15,8 +14,7 @@ export {
 	providers: [
 		Logger,
 		SteamService,
-		AxiosService,
-		SteamGateway
+		AxiosService
 	],
 	controllers: [
 		SteamController

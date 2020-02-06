@@ -6,9 +6,7 @@ import {
 	IsArray,
 	ArrayMinSize,
 	ArrayMaxSize,
-	ArrayUnique,
-	IsUrl,
-	Matches
+	ArrayUnique
 } from 'class-validator';
 
 export class UsersLinksDto {
@@ -19,11 +17,5 @@ export class UsersLinksDto {
 	@ArrayMinSize(2)
 	@ArrayMaxSize(20)
 	@ArrayUnique()
-	@IsUrl({}, {
-		each: true
-	})
-	@Matches(/^https:\/\/steamcommunity\.com\/id\/[^/]+\/?$/, {
-		each: true
-	})
 	readonly links: string[];
 }

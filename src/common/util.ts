@@ -41,3 +41,18 @@ export function intersects<T>(allItems: ListLike<T>[]) {
 		intersect<T>(intersections, items)
 	), itemsA);
 }
+
+export function createStringPropComparator(prop: string) {
+	return (a: {}, b: {}) => {
+
+		if (a[prop] > b[prop]) {
+			return 1;
+		}
+
+		if (a[prop] < b[prop]) {
+			return -1;
+		}
+
+		return 0;
+	};
+}
