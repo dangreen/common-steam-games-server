@@ -74,9 +74,8 @@ export default class SteamService {
 			}
 
 		} catch (catchedError) {
-			const err = new AppError(`Invalid steam user's link: ${link}`);
 			printError(logger, catchedError, `${loggerContext}::getSteamidFromLink`);
-			throw err;
+			throw new AppError(`Invalid steam user's link: ${link}`);
 		}
 
 		logger.verbose(`Result: ${steamid} (for ${link})`, `${loggerContext}::getSteamidFromLink`);
@@ -115,9 +114,8 @@ export default class SteamService {
 			return appIds;
 
 		} catch (catchedError) {
-			const err = new AppError(`Can't get ${steamidOrLink}'s games`);
 			printError(logger, catchedError, `${loggerContext}::getGamesList`);
-			throw err;
+			throw new AppError(`Can't get ${steamidOrLink}'s games`);
 		}
 	}
 
@@ -152,9 +150,8 @@ export default class SteamService {
 			return appInfo;
 
 		} catch (catchedError) {
-			const err = new AppError(`Can't get info about app with appid ${appid}`);
 			printError(logger, catchedError, `${loggerContext}::getGameInfo`);
-			throw err;
+			throw new AppError(`Can't get info about app with appid ${appid}`);
 		}
 	}
 
@@ -198,9 +195,8 @@ export default class SteamService {
 			return appsInfo;
 
 		} catch (catchedError) {
-			const err = new AppError(`Can't get info about apps with tag ${tag}`);
 			printError(logger, catchedError, `${loggerContext}::getGamesInfoByTag`);
-			throw err;
+			throw new AppError(`Can't get info about apps with tag ${tag}`);
 		}
 	}
 }
