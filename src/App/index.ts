@@ -13,6 +13,7 @@ import {
 	SwaggerModule,
 	DocumentBuilder
 } from '@nestjs/swagger';
+import cors from 'fastify-cors';
 import AppModule from './AppModule';
 
 async function bootstrap() {
@@ -21,6 +22,11 @@ async function bootstrap() {
 		AppModule,
 		new FastifyAdapter()
 	);
+
+	app.register(cors, {
+		origin:      true,
+		credentials: true
+	});
 
 	app.useGlobalPipes(
 		new ValidationPipe({
