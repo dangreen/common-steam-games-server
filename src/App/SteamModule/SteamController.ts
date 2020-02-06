@@ -4,6 +4,8 @@ import {
 	Controller,
 	OnModuleDestroy,
 	Logger,
+	HttpStatus,
+	HttpCode,
 	Post,
 	Body,
 	BadRequestException
@@ -54,6 +56,7 @@ export default class SteamController implements OnModuleDestroy {
 	}
 
 	@Post('common-multiplayer-games')
+	@HttpCode(HttpStatus.OK)
 	async commonMultiplayerGames(
 		@Body() data: UsersLinksDto
 	) {
