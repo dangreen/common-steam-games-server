@@ -45,11 +45,14 @@ export function intersects<T>(allItems: ListLike<T>[]) {
 export function createStringPropComparator(prop: string) {
 	return (a: {}, b: {}) => {
 
-		if (a[prop] > b[prop]) {
+		const aProp = a[prop].toLowerCase();
+		const bProp = b[prop].toLowerCase();
+
+		if (aProp > bProp) {
 			return 1;
 		}
 
-		if (a[prop] < b[prop]) {
+		if (aProp < bProp) {
 			return -1;
 		}
 
